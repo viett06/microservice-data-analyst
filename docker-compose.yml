@@ -1,0 +1,73 @@
+services:
+  postgresql:
+    container_name: ms_pg_data_sql
+    image: postgres:15
+    environment:
+      POSTGRES_USER: alibou
+      POSTGRES_PASSWORD: alibou
+      PGDATA: /data/postgres
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - "5433:5432"
+    networks:
+      - microservices-data-net
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: ms_data_pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_ADMIN:-pgadmin@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - 5051:80
+    networks:
+      - microservices-data-net
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo
+    container_name: mongo_data_db
+    ports:
+      - 27018:27017
+    volumes:
+      - mongo:/data
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: alibou
+      MONGO_INITDB_ROOT_PASSWORD: alibou
+    networks:
+      - microservices-data-net
+  mongo-express:
+    image: mongo-express
+    container_name: ms_data_mongo_express
+    restart: always
+    ports:
+      - 8083:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: alibou
+      ME_CONFIG_MONGODB_ADMINPASSWORD: alibou
+      ME_CONFIG_MONGODB_SERVER: mongodb   # ✅ KHÔNG có dấu '-' ở đầu nếu bạn dùng dạng key:value
+    networks:
+      - microservices-data-net
+  mail-dev:
+    container_name: ms-data-mail-dev
+    image: maildev/maildev
+    ports:
+      - 1081:1080
+      - 1026:1025
+    networks: # 👈 Thêm network
+      - microservices-data-net
+
+
+networks:
+  microservices-data-net:
+    driver: bridge
+
+volumes:
+  postgres:
+  pgadmin:
+  mongo:

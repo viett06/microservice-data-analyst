@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: auth-service
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5433/auth_db
+    username: alibou
+    password: alibou
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+  flyway:
+    baseline-on-migrate: true
+    enabled: true
+    baseline-description: "init"
+    baseline-version: 0
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+
+  sql:
+    init:
+      platform: postgresql
+      mode: always
+
+server:
+  port: 8082
+  servlet:
+    context-path: /auth
+
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:nUfJ0IIEZWvOFqlud2hLrdVgGkYLYNH6JR6NkF6bAMq+yhdoQrah87JcbUsnXzQ4}
+    access-expiration: 86400000     # 24 hours
+    refresh-expiration: 604800000   # 7 days
+    guest-expiration: 86400000      # 24 hours
+
+logging:
+  level:
+    com.datanalytica.auth: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
