@@ -1,11 +1,13 @@
 package com.viet.data.controller;
 
+import com.viet.data.config.SecurityUtils;
 import com.viet.data.dto.dtos.ApiResponse;
 import com.viet.data.dto.dtos.DatasetDTO;
 import com.viet.data.dto.request.AnalysisRequest;
 import com.viet.data.dto.response.AnalysisResult;
 import com.viet.data.service.DataProcessingService;
 import com.viet.data.service.DatasetService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,14 +27,18 @@ public class DataController {
 
     private final DataProcessingService dataProcessingService;
     private final DatasetService datasetService;
+    private final SecurityUtils securityUtils;
 
     @PostMapping("/upload")
     public ResponseEntity<ApiResponse<DatasetDTO>> uploadDataset(
             @RequestParam("file") MultipartFile file,
-            @RequestHeader("X-User-Id") String userId,
-            @RequestHeader("X-User-Role") String userRole) {
+            HttpServletRequest request) { // ✅ Thay thế @RequestHeader bằng HttpServletRequest
 
-        log.info("File upload request from user: {}, file: {}", userId, file.getOriginalFilename());
+        String userId = securityUtils.getCurrentUserId(request);
+        String userRole = securityUtils.getCurrentUserRole(request);
+
+        log.info("File upload request from user: {}, role: {}, file: {}",
+                userId, userRole, file.getOriginalFilename());
 
         try {
             DatasetDTO dataset = dataProcessingService.processUpload(file, userId, userRole);
@@ -48,9 +54,11 @@ public class DataController {
 
     @GetMapping("/datasets")
     public ResponseEntity<ApiResponse<List<DatasetDTO>>> getUserDatasets(
-            @RequestHeader("X-User-Id") String userId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) { // ✅ Thêm HttpServletRequest
+
+        String userId = securityUtils.getCurrentUserId(request);
 
         try {
             List<DatasetDTO> datasets = datasetService.getUserDatasets(userId, page, size);
@@ -66,9 +74,14 @@ public class DataController {
     @GetMapping("/datasets/{datasetId}")
     public ResponseEntity<ApiResponse<DatasetDTO>> getDataset(
             @PathVariable String datasetId,
-            @RequestHeader("X-User-Id") String userId) {
+            HttpServletRequest request) { // ✅ Thêm HttpServletRequest
+
+        String userId = securityUtils.getCurrentUserId(request);
 
         try {
+            // Validate user access to this dataset
+            securityUtils.validateUserAccess(request, userId);
+
             DatasetDTO dataset = datasetService.getDataset(datasetId, userId);
             return ResponseEntity.ok(ApiResponse.success(dataset));
 
@@ -82,9 +95,12 @@ public class DataController {
     @PostMapping("/analyze")
     public ResponseEntity<ApiResponse<AnalysisResult>> analyzeDataset(
             @Valid @RequestBody AnalysisRequest request,
-            @RequestHeader("X-User-Id") String userId) {
+            HttpServletRequest httpRequest) { // ✅ Thêm HttpServletRequest
 
-        log.info("Analysis request for dataset: {}, type: {}", request.getDatasetId(), request.getAnalysisType());
+        String userId = securityUtils.getCurrentUserId(httpRequest);
+
+        log.info("Analysis request from user: {} for dataset: {}, type: {}",
+                userId, request.getDatasetId(), request.getAnalysisType());
 
         try {
             request.setUserId(userId);
@@ -107,9 +123,14 @@ public class DataController {
     @DeleteMapping("/datasets/{datasetId}")
     public ResponseEntity<ApiResponse<Void>> deleteDataset(
             @PathVariable String datasetId,
-            @RequestHeader("X-User-Id") String userId) {
+            HttpServletRequest request) { // ✅ Thêm HttpServletRequest
+
+        String userId = securityUtils.getCurrentUserId(request);
 
         try {
+            // Validate user access before deletion
+            securityUtils.validateUserAccess(request, userId);
+
             datasetService.deleteDataset(datasetId, userId);
             return ResponseEntity.ok(ApiResponse.success("Dataset deleted successfully", null));
 
@@ -126,7 +147,9 @@ public class DataController {
     }
 
     @GetMapping("/stats")
-    public ResponseEntity<ApiResponse<Object>> getServiceStats(@RequestHeader("X-User-Id") String userId) {
+    public ResponseEntity<ApiResponse<Object>> getServiceStats(HttpServletRequest request) {
+        String userId = securityUtils.getCurrentUserId(request);
+
         try {
             long datasetCount = datasetService.getUserDatasetCount(userId);
             List<DatasetDTO> recentDatasets = datasetService.getRecentDatasets(userId, 5);
@@ -143,5 +166,16 @@ public class DataController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("STATS_ERROR", e.getMessage()));
         }
+    }
+
+    // Thêm endpoint để kiểm tra headers từ Gateway
+    @GetMapping("/debug/headers")
+    public ResponseEntity<Map<String, String>> debugHeaders(HttpServletRequest request) {
+        return ResponseEntity.ok(Map.of(
+                "X-User-Id", request.getHeader("X-User-Id"),
+                "X-User-Role", request.getHeader("X-User-Role"),
+                "X-User-Email", request.getHeader("X-User-Email"),
+                "Authorization", request.getHeader("Authorization")
+        ));
     }
 }

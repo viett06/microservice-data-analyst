@@ -1,11 +1,54 @@
+#spring:
+#  application:
+#    name: data-service
+#
+#  data:
+#    mongodb:
+#      uri: ${MONGODB_URI:mongodb://localhost:27018/data_analytics}
+#      database: ${MONGODB_DATABASE:data_processing}
+#
+#  servlet:
+#    multipart:
+#      max-file-size: 50MB
+#      max-request-size: 50MB
+#
+#server:
+#  port: 8085
+##  servlet:
+##    context-path: /data
+#
+#app:
+#  file:
+#    storage:
+#      path: ${FILE_STORAGE_PATH:./uploads}
+#      max-size: ${FILE_MAX_SIZE:52428800}   # 50MB in bytes
+#  processing:
+#    sample-size: ${PROCESSING_SAMPLE_SIZE:1000}
+#    preview-rows: ${PROCESSING_PREVIEW_ROWS:10}
+#
+#logging:
+#  level:
+#    com.datanalytica.dataprocessing: DEBUG
+#    org.springframework.web: INFO
+#  pattern:
+#    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+#
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: health,info,metrics
+#  endpoint:
+#    health:
+#      show-details: always
 spring:
   application:
     name: data-service
 
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/data_analytics}
-      database: ${MONGODB_DATABASE:data_processing}
+      uri: mongodb://alibou:alibou@localhost:27018/data_analytics?authSource=admin
+      database: data_analytics
 
   servlet:
     multipart:
@@ -14,14 +57,12 @@ spring:
 
 server:
   port: 8085
-  servlet:
-    context-path: /data
 
 app:
   file:
     storage:
       path: ${FILE_STORAGE_PATH:./uploads}
-      max-size: ${FILE_MAX_SIZE:52428800}   # 50MB in bytes
+      max-size: ${FILE_MAX_SIZE:52428800}
   processing:
     sample-size: ${PROCESSING_SAMPLE_SIZE:1000}
     preview-rows: ${PROCESSING_PREVIEW_ROWS:10}
@@ -29,9 +70,8 @@ app:
 logging:
   level:
     com.datanalytica.dataprocessing: DEBUG
-    org.springframework.web: INFO
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+    org.springframework.data.mongodb: DEBUG
+    com.mongodb: DEBUG
 
 management:
   endpoints:

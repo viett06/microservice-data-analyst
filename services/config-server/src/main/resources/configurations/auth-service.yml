@@ -31,8 +31,8 @@ spring:
 
 server:
   port: 8082
-  servlet:
-    context-path: /auth
+#  servlet:
+#    context-path: /auth
 
 
 app:
