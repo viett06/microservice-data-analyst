@@ -8,11 +8,11 @@ spring:
           enabled: true
           lower-case-service-id: true
       routes:
-        # Auth Service Route - Public endpoints
+        # Auth Service Route - Tất cả endpoints auth
         - id: auth-service
           uri: lb://auth-service
           predicates:
-            - Path=/auth/api/auth/**
+            - Path=/api/auth/**
           filters:
             - name: CircuitBreaker
               args:
@@ -33,17 +33,6 @@ spring:
                 fallbackUri: forward:/fallback/data
             - StripPrefix=1
 
-        # Public endpoints (no auth required)
-        - id: public-endpoints
-          uri: lb://auth-service
-          predicates:
-            - Path=/api/auth/register
-            - Path=/api/auth/login
-            - Path=/api/auth/guest
-            - Path=/api/auth/refresh
-          filters:
-            - StripPrefix=1
-
         # Service Discovery Route
         - id: eureka-service
           uri: http://localhost:8761
@@ -54,14 +43,16 @@ spring:
         - AddRequestHeader=X-Gateway-Request, true
         - AddResponseHeader=X-Gateway-Response, true
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          secret-value: ${JWT_SECRET:nUfJ0IIEZWvOFqlud2hLrdVgGkYLYNH6JR6NkF6bAMq+yhdoQrah87JcbUsnXzQ4}
+  # XÓA security config này - Gateway dùng custom JWT filter
+  # security:
+  #   oauth2:
+  #     resourceserver:
+  #       jwt:
+  #         secret-value: ${JWT_SECRET:...}
 
 server:
   port: 8086
+
 
 #eureka:
 #  client:
@@ -69,9 +60,13 @@ server:
 #      defaultZone: http://localhost:8761/eureka
 #    register-with-eureka: true
 #    fetch-registry: true
+#    healthcheck:
+#      enabled: true
 #  instance:
 #    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
 #    prefer-ip-address: true
+#    lease-renewal-interval-in-seconds: 5
+#    lease-expiration-duration-in-seconds: 10
 
 management:
   endpoints:
@@ -81,6 +76,7 @@ management:
   endpoint:
     health:
       show-details: always
+      show-components: always
 
 resilience4j:
   circuitbreaker:
@@ -89,12 +85,20 @@ resilience4j:
         register-health-indicator: true
         sliding-window-size: 10
         minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
       dataService:
         register-health-indicator: true
         sliding-window-size: 10
         minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
 
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
-    org.springframework.security: INFO
+    org.springframework.security: DEBUG  # ✅ Tăng để debug security
+    com.viet.gateway: DEBUG
+    reactor.netty: INFO

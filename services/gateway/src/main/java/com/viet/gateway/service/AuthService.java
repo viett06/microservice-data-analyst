@@ -19,7 +19,7 @@ public class AuthService {
     public Mono<TokenValidationResponse> validateToken(String token) {
         return webClientBuilder.build()
                 .post()
-                .uri("http://auth-service/auth/validate")  // ✅ SỬA URL
+                .uri("http://auth-service/api/auth/validate")  // SỬA URL
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .retrieve()

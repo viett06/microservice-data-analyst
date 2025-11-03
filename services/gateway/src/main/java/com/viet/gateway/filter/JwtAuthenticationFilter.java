@@ -50,6 +50,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
                                     .header("X-User-Id", validationResponse.getUserId().toString())
                                     .header("X-User-Role", String.join(",", validationResponse.getRoles()))
                                     .header("X-User-Email", validationResponse.getUsername())
+                                    .header("X-Internal-Auth", "true")
                                     .build();
 
                             log.debug("User authenticated: {} with roles: {}",

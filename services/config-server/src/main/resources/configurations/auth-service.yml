@@ -36,6 +36,10 @@ server:
 
 
 app:
+  admin:
+    email: ${EMAIL:vanviet0611@gmail.com}
+    password: ${ADMIN_PASSWORD:viet123}
+    fullname: ${FULLNAME:LeVanViet}
   jwt:
     secret: ${JWT_SECRET:nUfJ0IIEZWvOFqlud2hLrdVgGkYLYNH6JR6NkF6bAMq+yhdoQrah87JcbUsnXzQ4}
     access-expiration: 86400000     # 24 hours
