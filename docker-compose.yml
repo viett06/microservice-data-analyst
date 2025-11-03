@@ -33,7 +33,7 @@ services:
     image: mongo
     container_name: mongo_data_db
     ports:
-      - 27018:27017
+      - 27017:27017
     volumes:
       - mongo:/data
     environment:

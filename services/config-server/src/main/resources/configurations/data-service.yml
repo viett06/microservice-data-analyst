@@ -47,8 +47,12 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://alibou:alibou@localhost:27018/data_analytics?authSource=admin
+      username: alibou
+      password: alibou
+      host: localhost
+      port: 27017
       database: data_analytics
+      authentication-database: admin
 
   servlet:
     multipart:
